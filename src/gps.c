@@ -24,17 +24,17 @@ char *mgos_get_location()
     float lon = minmea_tocoord(&lastFrame.longitude);
     float speed = minmea_tocoord(&lastFrame.speed);
 
-    if (lat == NAN)
+    if (isnan(lat))
     {
         lat = 0.0f;
     }
 
-    if (lon == NAN)
+    if (isnan(lon))
     {
         lon = 0.0f;
     }
 
-    if (speed == NAN)
+    if (isnan(speed))
     {
         speed = 0.0f;
     }

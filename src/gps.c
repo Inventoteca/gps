@@ -84,7 +84,7 @@ static void parseGpsData(char *line)
         struct minmea_sentence_gga frame;
         if (minmea_parse_gga(&frame, lineNmea))
         {
-            printf("$GGA: fix quality: %d\n", frame.fix_quality);
+            //printf("$GGA: fix quality: %d\n", frame.fix_quality);
         }
     }
     break;
@@ -95,7 +95,10 @@ static void parseGpsData(char *line)
         if (minmea_parse_gsv(&frame, lineNmea))
         {
             //printf("$GSV: message %d of %d\n", frame.msg_nr, frame.total_msgs);
-            printf("$GSV: sattelites in view: %d\n", frame.total_sats);
+            
+            //printf("$GSV: sattelites in view: %d\n", frame.total_sats);
+            
+            
             /*for (int i = 0; i < 4; i++)
         printf("$GSV: sat nr %d, elevation: %d, azimuth: %d, snr: %d dbm\n",
                frame.sats[i].nr,

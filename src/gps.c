@@ -16,6 +16,11 @@ static int gps_uart_no = 0;
 static size_t gpsDataAvailable = 0;
 static struct minmea_sentence_rmc lastFrame;
 static char* gps_data;
+float last_lat;
+float last_lon;
+float last_speed;
+static int sat = 0;
+static int qt = 0;
 
 char *mgos_get_location()
 {
@@ -39,7 +44,7 @@ char *mgos_get_location()
         speed = 0.0f;
     }
 
-    snprintf(gps_data, 63, "{lat: \"%f\", lon: \"%f\", sp: \"%f\"}", lat, lon, speed);
+    snprintf(gps_data, 80, "{lat: \"%f\", lon: \"%f\", sp: \"%f\", sat: \"%d\" , qt: \"%d\"}", lat, lon, speed, sat, qt);
 
     return gps_data;
 }
@@ -85,6 +90,7 @@ static void parseGpsData(char *line)
         if (minmea_parse_gga(&frame, lineNmea))
         {
             //printf("$GGA: fix quality: %d\n", frame.fix_quality);
+            qt = frame.fix_quality;
         }
     }
     break;
@@ -94,6 +100,7 @@ static void parseGpsData(char *line)
         struct minmea_sentence_gsv frame;
         if (minmea_parse_gsv(&frame, lineNmea))
         {
+            sat = frame.total_sats;
             //printf("$GSV: message %d of %d\n", frame.msg_nr, frame.total_msgs);
             
             //printf("$GSV: sattelites in view: %d\n", frame.total_sats);

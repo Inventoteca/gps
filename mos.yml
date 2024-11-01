@@ -12,6 +12,8 @@ includes:
 
 #filesystem:
 #  - fs
+libs:
+  - origin: https://github.com/mongoose-os-libs/location
 
 config_schema:
   - ["gps", "o", { title: "GPS Settings"}]

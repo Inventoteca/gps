@@ -16,7 +16,7 @@
  * Returns:
  *  json object with format {lat: \"%f\", lon: \"%f\", sp: \"%f\"}
  */
-char *mgos_get_location();
+void mgos_save_location();
 
 /**
  * @brief MGOS lib init

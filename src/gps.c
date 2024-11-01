@@ -16,14 +16,15 @@
 static int gps_uart_no = 0;
 static size_t gpsDataAvailable = 0;
 static struct minmea_sentence_rmc lastFrame;
-static char *gps_data;
+// static char *gps_data;
 float last_lat;
 float last_lon;
 float last_speed;
 static int sat = 0;
 static int qt = 0;
+static double last_update_time = 0;
 
-char *mgos_get_location()
+void mgos_save_location()
 {
 
     float lat = minmea_tocoord(&lastFrame.latitude);
@@ -45,9 +46,13 @@ char *mgos_get_location()
         speed = 0.0f;
     }
 
-    snprintf(gps_data, 80, "{lat: \"%f\", lon: \"%f\", sp: \"%f\", sat: \"%d\" , qt: \"%d\"}", lat, lon, speed, sat, qt);
+    mgos_sys_config_set_device_location_lat(lat);
+    mgos_sys_config_set_device_location_lon(lon);
+    LOG(LL_INFO, ("GPS coordinates: Latitude = %f, Longitude = %f", lat, lon));
 
-    return gps_data;
+    // snprintf(gps_data, 80, "{lat: \"%f\", lon: \"%f\", sp: \"%f\", sat: \"%d\" , qt: \"%d\"}", lat, lon, speed, sat, qt);
+
+    // return gps_data;
 }
 
 static void parseGpsData(char *line)
@@ -70,8 +75,17 @@ static void parseGpsData(char *line)
 
             float lat = minmea_tocoord(&lastFrame.latitude);
             float lon = minmea_tocoord(&lastFrame.longitude);
-            mgos_sys_config_set_device_location_lat(lat);
-            mgos_sys_config_set_device_location_lon(lon);
+
+            // Aqui poner una condicion para llamar mgos_get_location() "gps.update_interval" qeu son segundos
+            // Verifica el intervalo de actualización
+            double current_time = mgos_uptime(); // Obtén el tiempo en segundos desde el inicio
+            if (current_time - last_update_time >= mgos_sys_config_get_gps_update_interval())
+            {
+                last_update_time = current_time;
+
+                // Llama a la función para obtener la ubicación
+                mgos_save_location();
+            }
 
             // Guardar la configuración en un archivo para que sea permanente
             // if (!mgos_sys_config_save(&mgos_sys_config, false /* no reconfigura la red */, NULL /* no callback */))
@@ -103,7 +117,7 @@ static void parseGpsData(char *line)
     break;
 
     case MINMEA_SENTENCE_GGA:
-    {   
+    {
         struct minmea_sentence_gga frame;
         if (minmea_parse_gga(&frame, lineNmea))
         {
@@ -227,12 +241,12 @@ bool mgos_gps_init(void)
         return false;
     }
 
-    mgos_set_timer(mgos_sys_config_get_gps_update_interval() /* ms */, true /* repeat */, gps_read_cb, NULL /* arg */);
+    mgos_set_timer(mgos_sys_config_get_gps_update_interval_uart() /* ms */, true /* repeat */, gps_read_cb, NULL /* arg */);
 
     mgos_uart_set_dispatcher(gps_uart_no, uart_dispatcher, NULL /* arg */);
     mgos_uart_set_rx_enabled(gps_uart_no, true);
 
-    gps_data = calloc(1, 64);
+    // gps_data = calloc(1, 64);
 
     return true;
 }

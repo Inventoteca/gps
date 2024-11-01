@@ -20,7 +20,8 @@ config_schema:
   - ["gps.enable", "b", true, {title: "Enable GPS Serial"}]
   - ["gps.uart_no", "i", 2, { title: "Serial port number for gps"}]    
   - ["gps.baud_rate", "i", 9600, { title: "Serial baud rate for gps"}]    
-  - ["gps.update_interval", "i", 2000, { title: "Time between gps reads"}]
+  - ["gps.update_interval", "i", 60, { title: "Seconds between gps save device location"}]
+  - ["gps.update_interval_uart", "i", 2000, { title: "Time between gps reads uart"}]
   - ["gps.rx_gpio", "i", 16, { title: "Pin for read GPS"}]  
   - ["gps.tx_gpio", "i", 17, { title: "Pin for read GPS"}]  
 

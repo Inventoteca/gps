@@ -103,7 +103,7 @@ static void parseGpsData(char *line)
     break;
 
     case MINMEA_SENTENCE_GGA:
-    {
+    {   
         struct minmea_sentence_gga frame;
         if (minmea_parse_gga(&frame, lineNmea))
         {

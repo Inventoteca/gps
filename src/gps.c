@@ -191,6 +191,7 @@ static void uart_dispatcher(int uart_no, void *arg)
 
 bool mgos_gps_init(void)
 {
+    if (!mgos_sys_config_get_gps_enable()) return true;
 
     struct mgos_uart_config ucfg;
     gps_uart_no = mgos_sys_config_get_gps_uart_no();

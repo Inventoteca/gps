@@ -11,11 +11,12 @@
 #include "mgos.h"
 #include "gps.h"
 #include "minmea.h"
+#include "mgos_sys_config.h"
 
 static int gps_uart_no = 0;
 static size_t gpsDataAvailable = 0;
 static struct minmea_sentence_rmc lastFrame;
-static char* gps_data;
+static char *gps_data;
 float last_lat;
 float last_lon;
 float last_speed;
@@ -57,7 +58,7 @@ static void parseGpsData(char *line)
     lineNmea[sizeof(lineNmea) - 1] = '\0';
 
     enum minmea_sentence_id id = minmea_sentence_id(lineNmea, false);
-    //printf("sentence id = %d from line %s\n", (int) id, lineNmea);
+    // printf("sentence id = %d from line %s\n", (int) id, lineNmea);
     switch (id)
     {
     case MINMEA_SENTENCE_RMC:
@@ -66,6 +67,23 @@ static void parseGpsData(char *line)
         if (minmea_parse_rmc(&frame, lineNmea))
         {
             lastFrame = frame;
+
+            float lat = minmea_tocoord(&lastFrame.latitude);
+            float lon = minmea_tocoord(&lastFrame.longitude);
+            mgos_sys_config_set_device_location_lat(lat);
+            mgos_sys_config_set_device_location_lon(lon);
+
+            // Guardar la configuración en un archivo para que sea permanente
+            // if (!mgos_sys_config_save(&mgos_sys_config, false /* no reconfigura la red */, NULL /* no callback */))
+            //{
+            //    LOG(LL_ERROR, ("Failed to save configuration"));
+            //}
+            // else
+            //{
+            //    pulsos_litro = mgos_sys_config_get_app_pulsos_litro();
+            //    LOG(LL_INFO, ("Configuration saved: pulsos_litro = %.2f", pulsos_litro));
+            //}
+
             /*
       printf("$RMC: raw coordinates and speed: (%d/%d,%d/%d) %d/%d\n",
              frame.latitude.value, frame.latitude.scale,
@@ -89,7 +107,7 @@ static void parseGpsData(char *line)
         struct minmea_sentence_gga frame;
         if (minmea_parse_gga(&frame, lineNmea))
         {
-            //printf("$GGA: fix quality: %d\n", frame.fix_quality);
+            // printf("$GGA: fix quality: %d\n", frame.fix_quality);
             qt = frame.fix_quality;
         }
     }
@@ -101,11 +119,10 @@ static void parseGpsData(char *line)
         if (minmea_parse_gsv(&frame, lineNmea))
         {
             sat = frame.total_sats;
-            //printf("$GSV: message %d of %d\n", frame.msg_nr, frame.total_msgs);
-            
-            //printf("$GSV: sattelites in view: %d\n", frame.total_sats);
-            
-            
+            // printf("$GSV: message %d of %d\n", frame.msg_nr, frame.total_msgs);
+
+            // printf("$GSV: sattelites in view: %d\n", frame.total_sats);
+
             /*for (int i = 0; i < 4; i++)
         printf("$GSV: sat nr %d, elevation: %d, azimuth: %d, snr: %d dbm\n",
                frame.sats[i].nr,
@@ -150,7 +167,7 @@ static void parseGpsData(char *line)
 static void gps_read_cb(void *arg)
 {
 
-    //printf("Hello, GPS!\r\n");
+    // printf("Hello, GPS!\r\n");
     if (gpsDataAvailable > 0)
     {
         struct mbuf rxb;
@@ -159,11 +176,11 @@ static void gps_read_cb(void *arg)
         if (rxb.len > 0)
         {
             char *pch;
-            //printf("%.*s", (int) rxb.len, rxb.buf);
+            // printf("%.*s", (int) rxb.len, rxb.buf);
             pch = strtok(rxb.buf, "\n");
             while (pch != NULL)
             {
-                //printf("GPS lineNmea: %s\n", pch);
+                // printf("GPS lineNmea: %s\n", pch);
                 parseGpsData(pch);
                 pch = strtok(NULL, "\n");
             }
@@ -191,7 +208,8 @@ static void uart_dispatcher(int uart_no, void *arg)
 
 bool mgos_gps_init(void)
 {
-    if (!mgos_sys_config_get_gps_enable()) return true;
+    if (!mgos_sys_config_get_gps_enable())
+        return true;
 
     struct mgos_uart_config ucfg;
     gps_uart_no = mgos_sys_config_get_gps_uart_no();
@@ -199,11 +217,11 @@ bool mgos_gps_init(void)
 
     ucfg.baud_rate = mgos_sys_config_get_gps_baud_rate();
     ucfg.num_data_bits = 8;
-    //ucfg.dev.tx_gpio = 17;
+    // ucfg.dev.tx_gpio = 17;
     ucfg.dev.rx_gpio = mgos_sys_config_get_gps_rx_gpio();
     ucfg.dev.tx_gpio = mgos_sys_config_get_gps_tx_gpio();
-    //ucfg.parity = MGOS_UART_PARITY_NONE;
-    //ucfg.stop_bits = MGOS_UART_STOP_BITS_1;
+    // ucfg.parity = MGOS_UART_PARITY_NONE;
+    // ucfg.stop_bits = MGOS_UART_STOP_BITS_1;
     if (!mgos_uart_configure(gps_uart_no, &ucfg))
     {
         return false;
@@ -215,6 +233,6 @@ bool mgos_gps_init(void)
     mgos_uart_set_rx_enabled(gps_uart_no, true);
 
     gps_data = calloc(1, 64);
-    
+
     return true;
 }

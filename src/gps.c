@@ -31,13 +31,13 @@ void mgos_save_location()
     float lon = minmea_tocoord(&lastFrame.longitude);
     float speed = minmea_tocoord(&lastFrame.speed);
 
-    if (isnan(lat))
+    if ((isnan(lat)) || (lat >= 999))
     {
         // lat = 0.0f;
         lat = mgos_sys_config_get_device_location_lat();
     }
 
-    if (isnan(lon))
+    if ((isnan(lon)) || (lon >= 999))
     {
         // lon = 0.0f;
         lon = mgos_sys_config_get_device_location_lon();

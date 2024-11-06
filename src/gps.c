@@ -33,12 +33,14 @@ void mgos_save_location()
 
     if (isnan(lat))
     {
-        lat = 0.0f;
+        // lat = 0.0f;
+        lat = mgos_sys_config_get_device_location_lat();
     }
 
     if (isnan(lon))
     {
-        lon = 0.0f;
+        // lon = 0.0f;
+        lon = mgos_sys_config_get_device_location_lon();
     }
 
     if (isnan(speed))
@@ -46,8 +48,12 @@ void mgos_save_location()
         speed = 0.0f;
     }
 
+    // if (lat != 0 && lon != 0)
+    //{
     mgos_sys_config_set_device_location_lat(lat);
     mgos_sys_config_set_device_location_lon(lon);
+    //}
+
     LOG(LL_INFO, ("GPS coordinates: Latitude = %f, Longitude = %f", lat, lon));
 
     // snprintf(gps_data, 80, "{lat: \"%f\", lon: \"%f\", sp: \"%f\", sat: \"%d\" , qt: \"%d\"}", lat, lon, speed, sat, qt);
